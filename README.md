@@ -11,7 +11,7 @@ Located in `.github/workflows/`
 
 - **backend.yml** – Builds, tests, and optionally deploys the backend service.
 - **frontend.yml** – Handles build and deploy steps for the frontend (Next.js) app.
-- **devops-check.yml** – Runs static analysis and linting to enforce code quality across both services.
+
 
 These workflows automate testing, building Docker images, and preparing for deployment in staging/production environments.
 
