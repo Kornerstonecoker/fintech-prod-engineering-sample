@@ -1,0 +1,46 @@
+# -------- Stage 1: Build the Next.js app --------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files first for caching
+COPY package.json package-lock.json ./
+
+# Install all dependencies for build
+RUN npm ci
+
+# Copy the rest of the application code
+COPY . .
+
+# Set env for production build
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build Next.js app
+RUN npm run build
+
+# -------- Stage 2: Lightweight Production Image --------
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Install only production dependencies
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
+
+# Copy build artifacts from builder stage
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/next.config.js ./next.config.js
+
+# Optional: Copy public directory if it exists (commented out for now)
+# COPY --from=builder /app/public ./public
+
+# Note: .env.docker will be handled by docker-compose, no need to bake into image
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start"]

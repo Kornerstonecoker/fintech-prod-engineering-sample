@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: payliteuser
+      POSTGRES_PASSWORD: paylitepassword
+      POSTGRES_DB: paylite_dev
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - paylite-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      NODE_ENV: production
+    env_file:
+      - ./backend/.env.production
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+    networks:
+      - paylite-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:3000"
+    env_file:
+      - ./frontend/.env.production
+    restart: always
+    depends_on:
+      - backend
+    networks:
+      - paylite-network
+
+volumes:
+  postgres-data:
+
+networks:
+  paylite-network:
+    driver: bridge
